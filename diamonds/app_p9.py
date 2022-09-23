@@ -1,16 +1,13 @@
-import seaborn as sns
+from shiny import App, ui, render
+import plotnine as p9
+from plotnine.data import diamonds
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 
-from shiny import App, render, ui
-
-diamonds = sns.load_dataset('diamonds')
+from shiny import App, reactive, render, ui
 
 app_ui = ui.page_fluid(
     ui.layout_sidebar(
         ui.panel_sidebar(
-            ui.input_text("x", "Text input", placeholder="Enter text"),
             ui.input_slider("sampleSize", "Sample Size", min=1, max=len(diamonds), 
                             value=min(1000, len(diamonds)), step=500),
             ui.input_checkbox("jitter", "Jitter", value = True),
@@ -20,31 +17,45 @@ app_ui = ui.page_fluid(
             ui.input_select("color", "Color", list(diamonds), selected=None),
 
             ui.input_select("facet_row", 'Facet Row', list(diamonds.select_dtypes(include='category')), selected=None),
-            ui.input_select("facet_row", 'Facet Row', list(diamonds.select_dtypes(include='category')), selected=None)
+            ui.input_select("facet_column", 'Facet Column', list(diamonds.select_dtypes(include='category')), selected=None)
         ),
         ui.panel_main(
-            ui.output_text_verbatim("txt"),
-            ui.output_plot("myPlot1")
+            ui.output_text_verbatim("txt1"),
+            ui.output_text_verbatim("txt2"),
+            ui.output_plot("myPlot1"),
             ),
     )  
 )
 
 def server(input, output, session):
+    @reactive.Calc
+    def filtered_dataset():
+        data = diamonds.sample(input.sampleSize())
+        return data
+
+
     @output
     @render.text
-    def txt():
-        return f'x: "{input.x()}"'
+    def txt1():
+        return f'x: {input.x()}'
 
     @output
+    @render.text
+    def txt2():
+        return f'y: {input.y()}'
+    
+    # using matplotlib
+    @output
     @render.plot
-    def myPlot1(alt="A histogram"):
-        np.random.seed(19680801)
-        x = 100 + 15 * np.random.randn(437)
+    def myPlot1():
+        df = filtered_dataset()
 
-        fig, ax = plt.subplots()
-        ax.hist(x, input.sampleSize(), density=True)
-        return fig
-
+        plot = (
+          p9.ggplot(df, p9.aes(x = df[input.x()], y=df[input.y()], color= df[input.color()])) + 
+          p9.geom_point()
+        )
+      
+        return plot.draw()
 
 app = App(app_ui, server, debug=True)
 
