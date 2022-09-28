@@ -1,4 +1,4 @@
-from shiny import *
+from shiny import ui, reactive, render, App
 import random
 
 app_ui = ui.page_fluid(
@@ -20,17 +20,27 @@ app_ui = ui.page_fluid(
 
     ui.h1("Consequences"),
     #ui.p("win text or lose text"),
-    ui.output_text("consequence_text"),
+    ui.output_text("txt"),
 
     ui.h1("play again??"),
 
     ui.input_action_button("play_again", "Play again!"),
-    ui.input_action_button("end_game", "No, thank you"),
-
-    ui.input_text("txt", "Enter the text to display below:")
+    ui.input_action_button("end_game", "No, thank you")
 
 )
 
+def consequences(cave_number: int):
+    # friendly dragon == match with cave_number
+    options = [1, 2]
+    friendly = random.sample(options, 1)[0]
+    print("Friendly is...." + str(friendly))
+    print("Cave Number is..." + str(cave_number))
+    if friendly == cave_number:
+        message = "Congratulations, you have a dragon friend!"
+        return message
+    else:
+        message = "Womp womp you've been eaten by a hungry dragon"
+        return message
 
 def server(input, output, session):
 
@@ -52,16 +62,7 @@ def server(input, output, session):
     def _():
         print("Cave 2 button is pressed")
         cave_number.set(2)
-
-    
-    @output
-    @render.text
-    def consequence_text():
-        #return "cave_number is.. " + str(cave_number())
-        return consequences(cave_number())
-
-
-
+ 
     @reactive.Effect
     @reactive.event(input.play_again)
     def _():
@@ -74,22 +75,11 @@ def server(input, output, session):
 
     @output
     @render.text
-    def text():
-        return input.txt()
-
-def consequences(cave_number):
-    # friendly dragon == match with cave_number
-    options = [1, 2]
-    friendly = random.sample(options, 1)
-    if cave_number == friendly:
-        return "Congratulations, you have a dragon friend!"
-    else:
-        return "Womp womp you've been eaten by a hungry dragon"
-
+    def txt():
+        return consequences(cave_number())
     
-
-
 app = App(app_ui, server)
+
 
 #' Flowchart
 #'  Start (mash with intro text for round 1)
