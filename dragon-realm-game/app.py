@@ -1,40 +1,82 @@
 from shiny import ui, reactive, render, App
+from typing import List
+from shiny.types import NavSetArg
 import random
 
-app_ui = ui.page_fluid(
-    ui.h1("Intro"),
-    ui.p(
-        """
-        You are in a land full of dragons. In front of you, you see two caves.
-        In one cave, the dragon is friendly and will share his treasure with you. 
-        The other dragon is greedy and hungry, and will eat you on sight
-        """
-    ),
+def nav_controls() -> List[NavSetArg]:
+    return [
+        ui.nav("Intro", 
+            ui.p(
+                """
+                You are in a land full of dragons. In front of you, you see two caves.
+                In one cave, the dragon is friendly and will share his treasure with you. 
+                The other dragon is greedy and hungry, and will eat you on sight
+                """
+            ),
+            ui.input_action_button("intro_continue", "Continue")
+        ),   
+        ui.nav("Question", 
+            ui.p("Which cave you want to go into? (1 or 2)"),
+            ui.input_action_button("cave_01", "Cave 1"),
+            ui.input_action_button("cave_02", "Cave 2"),
+        ),
+        ui.nav("Consequences", 
+            ui.output_text("txt"),
 
-    ui.input_action_button("intro_continue", "Continue"),
+            ui.h1("play again??"),
+
+            ui.input_action_button("play_again", "Play again!"),
+            ui.input_action_button("end_game", "No, thank you")
+        )
+        
+    ]
+
+# Trying navs for the expected game flow
+app_ui = ui.page_navbar(
+    #*nav_controls(),
+    title="Dragon Game",  
+    id = "dragon_tabs",
+
+    footer=ui.div(
+        ui.navset_pill(*nav_controls())
+    )
     
-    ui.h1("Question"),
-    ui.p("Which cave you want to go into? (1 or 2)"),
-    ui.input_action_button("cave_01", "Cave 1"),
-    ui.input_action_button("cave_02", "Cave 2"),
 
-    ui.h1("Consequences"),
-    #ui.p("win text or lose text"),
-    ui.output_text("txt"),
+) 
 
-    ui.h1("play again??"),
 
-    ui.input_action_button("play_again", "Play again!"),
-    ui.input_action_button("end_game", "No, thank you")
+# # Baseline code
+# app_ui = ui.page_fluid(
+#     ui.h1("Intro"),
+#     ui.p(
+#         """
+#         You are in a land full of dragons. In front of you, you see two caves.
+#         In one cave, the dragon is friendly and will share his treasure with you. 
+#         The other dragon is greedy and hungry, and will eat you on sight
+#         """
+#     ),
 
-)
+#     ui.input_action_button("intro_continue", "Continue"),
+    
+#     ui.h1("Question"),
+#     ui.p("Which cave you want to go into? (1 or 2)"),
+#     ui.input_action_button("cave_01", "Cave 1"),
+#     ui.input_action_button("cave_02", "Cave 2"),
+
+#     ui.h1("Consequences"),
+#     ui.output_text("txt"),
+
+#     ui.h1("play again??"),
+
+#     ui.input_action_button("play_again", "Play again!"),
+#     ui.input_action_button("end_game", "No, thank you")
+# )
+
 
 def consequences(cave_number: int):
     # friendly dragon == match with cave_number
     options = [1, 2]
     friendly = random.sample(options, 1)[0]
-    print("Friendly is...." + str(friendly))
-    print("Cave Number is..." + str(cave_number))
     if friendly == cave_number:
         message = "Congratulations, you have a dragon friend!"
         return message
@@ -71,7 +113,7 @@ def server(input, output, session):
     @reactive.Effect
     @reactive.event(input.end_game)
     def _():
-        print("No: thank you button is pressed")
+        print("No, Thank you button is pressed")
 
     @output
     @render.text
