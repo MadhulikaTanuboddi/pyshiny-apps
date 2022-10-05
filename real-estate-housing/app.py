@@ -22,7 +22,7 @@ app_ui = ui.page_fluid(
     ui.output_table("result"),
 )
 
-def server(input, output):
+def server(input, output, session):
     @output
     @render.table
     def result():
