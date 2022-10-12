@@ -15,8 +15,8 @@ enroll_list = pd.read_csv(Path(__file__).parent / "scc_enrollment.csv")
 enroll_list["Date"] = enroll_list["Date"].astype('datetime64[ns]')
 enroll_list["Year"] = enroll_list["Date"].dt.year
 
-# DATA CLEANING: Remove unavilable data label "*"
-enroll_list = enroll_list.replace({'\*' : ''}, regex = True )
+# DATA CLEANING: Remove unavailable data label "*"
+enroll_list = enroll_list.replace({'\*' : '0'}, regex = True )
 
 # Create input lists
 age = enroll_list["Age"].unique().tolist()
@@ -44,6 +44,9 @@ def server(input, output, session):
         dis = input.disability()
         target_list = ['Age', 'Year', dis]
         sub_df = sub_df.filter(regex="|".join(target_list), axis=1)
+
+        sub_df[dis]=sub_df[dis].astype('int64')
+       # enroll_list["Date"] = enroll_list["Date"].astype('datetime64[ns]')
 
         # Plot data
         g = sns.lineplot(

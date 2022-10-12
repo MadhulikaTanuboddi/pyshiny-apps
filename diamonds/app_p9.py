@@ -44,7 +44,6 @@ def server(input, output, session):
     def txt2():
         return f'y: {input.y()}'
     
-    # using matplotlib
     @output
     @render.plot
     def myPlot1():
