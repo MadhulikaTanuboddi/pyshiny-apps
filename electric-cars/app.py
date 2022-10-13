@@ -1,6 +1,7 @@
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 import pandas as pd
 import seaborn as sns
+import asyncio
 
 from pathlib import Path
 
@@ -37,14 +38,22 @@ app_ui = ui.page_fluid(
             ui.input_checkbox_group(
                 "drive", "Drive type", {"fw": "Front Wheel", "rw": "Rear Wheel", "aw": "All Wheel" }
             ),
-            ui.input_action_button("btn", "Update", class_="btn-sm"),
+            ui.input_action_button("btn", "Press Update", class_="btn-sm"),
         ),
-        ui.panel_main(ui.output_plot("barchart"))
+        ui.panel_main(
+            ui.output_plot("barchart"),
+            ui.output_table("mytable"),
+            ui.output_text_verbatim("mytext")
+            )
     )
 )
 
 
 def server(input: Inputs, output: Outputs, session: Session):
+    
+    # Exploring reactive.Value concept
+    drive_type = reactive.Value("hello")
+
     @reactive.Calc
     def filtered_df():
         indx_make = ev_list["Make"].isin(input.make())
@@ -54,16 +63,12 @@ def server(input: Inputs, output: Outputs, session: Session):
         
         sub_df = ev_list[indx_make & indx_range & indx_speed]
         return sub_df
-        
-        
-        # sub_df = ev_list[indx_make & indx_range & indx_speed & indx_drive]
-        # result = min(sub_df, default="EMPTY")
-        # return result
-
 
     @output
     @render.plot
-    @reactive.event(input.btn)
+    # We want to be able to have the function execute first time and render the plot
+    # without pressing the button. So, adding ignore_none=False
+    @reactive.event(input.btn, ignore_none=False)
     def barchart():
         g = sns.catplot(
             data=filtered_df(),
@@ -79,5 +84,28 @@ def server(input: Inputs, output: Outputs, session: Session):
         
         return g
 
+    # @output
+    # @render.text
+    # async def mytext():
+    #     #print(input.drive())
+    #     #return f"Result: {drive_type()}"
+    #     return f"Result: {input.drive()}"
+
+    @output
+    @render.text
+    async def mytext():
+        input.btn()        # Take a dependency on the button
+        await asyncio.sleep(2) # Wait 2 seconds (to simulate a long computation)
+        
+        # Exploring setting reactive value within isolate
+        with reactive.isolate():
+            # Inside this block, we can use input.drive() without taking a
+            # dependency on it.
+            if not input.drive():
+                drive_type.set("None selected")
+                return f"Result: {drive_type()}"
+            else:
+                drive_type.set("Atleast one drive type is selected")
+                return f"Result: {drive_type()}"
 
 app = App(app_ui, server)

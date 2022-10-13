@@ -58,8 +58,16 @@ def server(input, output, session):
         )
 
         # Format axis labels
-        g.set_ylabel("Number Of Enrolled Srudents")
+        g.set_ylabel("Number Of Enrolled Students")
 
         return g
 
 app = App(app_ui, server)
+
+#TODO:
+# Implement Shiny modules
+# Have dropdown of disability
+#For each age value:
+ #Have value boxes of max count / average count
+ #Have plot output
+ #(This “value boxes + plot output” should be written as a shiny module)
