@@ -42,8 +42,8 @@ app_ui = ui.page_fluid(
         ),
         ui.panel_main(
             ui.output_plot("barchart"),
-            ui.output_table("mytable"),
-            ui.output_text_verbatim("mytext")
+            ui.output_text_verbatim("mytext_1"),
+            ui.output_text_verbatim("mytext_2")
             )
     )
 )
@@ -84,16 +84,11 @@ def server(input: Inputs, output: Outputs, session: Session):
         
         return g
 
-    # @output
-    # @render.text
-    # async def mytext():
-    #     #print(input.drive())
-    #     #return f"Result: {drive_type()}"
-    #     return f"Result: {input.drive()}"
+    
+    @reactive.Effect
+    async def my_text_value():
+        '''Using reactive effect to set a new value to the reactive value variable'''
 
-    @output
-    @render.text
-    async def mytext():
         input.btn()        # Take a dependency on the button
         await asyncio.sleep(2) # Wait 2 seconds (to simulate a long computation)
         
@@ -103,9 +98,36 @@ def server(input: Inputs, output: Outputs, session: Session):
             # dependency on it.
             if not input.drive():
                 drive_type.set("None selected")
-                return f"Result: {drive_type()}"
             else:
                 drive_type.set("Atleast one drive type is selected")
-                return f"Result: {drive_type()}"
+
+
+    @reactive.Calc
+    async def my_text_calc():
+        '''Using reactive calculation to return a specific string'''
+        input.btn()        # Take a dependency on the button
+        await asyncio.sleep(2) # Wait 2 seconds (to simulate a long computation)
+        
+        # Exploring setting reactive value within isolate
+        with reactive.isolate():
+            # Inside this block, we can use input.drive() without taking a
+            # dependency on it.
+            if not input.drive():
+                return "None selected"
+            else:
+                return "Atleast one drive type is selected"
+
+
+
+    @output
+    @render.text
+    async def mytext_1():
+        return f"Result: {drive_type()}" # Uses reactive effect
+
+
+    @output
+    @render.text
+    async def mytext_2():
+        return f"Result: {await my_text_calc()}" # Used reactive calculation
 
 app = App(app_ui, server)
