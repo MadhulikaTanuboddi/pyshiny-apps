@@ -75,20 +75,6 @@ def server(input, output, session):
     def _():
         print("A cave button was pressed")
         ui.update_navs("dragon_tabs", selected = "Consequences")
-    
-    
-    # BEFORE
-    @reactive.Effect
-    @reactive.event(input.cave_01)
-    def _():
-        print("Cave 1 button is pressed")
-        cave_number.set(1)
-
-    @reactive.Effect
-    @reactive.event(input.cave_02)
-    def _():
-        print("Cave 2 button is pressed")
-        cave_number.set(2)
  
     @reactive.Effect
     @reactive.event(input.play_again)
